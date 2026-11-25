@@ -518,9 +518,9 @@
       selectDraft();
     }
     syncURL();
-    function addSelection(text) {
+    function addSelection(text, replace = false) {
       try {
-        if (submitting) throw new Error('查询正在提交，请稍后再添加关键词。');
+        if (submitting) throw new Error('查询正在提交，请稍后再修改关键词。');
         syncURL();
         if (!editor || editor.stale) throw new Error('请先重新读取当前查询。');
         // Work on a copy so unsupported advanced queries and invalid selections
@@ -528,7 +528,7 @@
         const next = Object.assign(Object.create(Object.getPrototypeOf(editor)),editor);
         const mode = next.mode;
         if (mode === 'advanced') next.switchMode('simple');
-        next.input = Q.appendKeyword(next.input,text,next.ctx.dialect);
+        next.input = Q.appendKeyword(replace ? '' : next.input,text,next.ctx.dialect);
         if (mode === 'advanced') next.switchMode('advanced');
         next.getURL(location.href);
         next.dirty = true;
@@ -560,6 +560,10 @@
     const diagnose = reason => mounted?.host?.setAttribute('data-selection-state',reason);
     diagnose('ready');
     const hide = event => { if (host) diagnose('hidden:' + (event?.type || 'manual')); host?.remove(); host = null; text = ''; };
+    const position = rect => {
+      host.style.left = `${Math.max(8,Math.min(rect.left,innerWidth-host.getBoundingClientRect().width-8))}px`;
+      host.style.top = `${Math.max(8,Math.min(rect.bottom+6,innerHeight-host.getBoundingClientRect().height-8))}px`;
+    };
     const ignored = 'input,textarea,[contenteditable]:not([contenteditable="false"]),#easygrafana-extension,#easygrafana-json-viewer,#easygrafana-selection-search';
     function consider(event) {
       diagnose('event');
@@ -579,17 +583,21 @@
       if (!rect.width || !rect.height) return;
       text = value; sourceURL = location.href;
       host = document.createElement('div'); host.id = 'easygrafana-selection-search';
-      host.style.cssText = `position:fixed;z-index:2147483646;left:${Math.max(8,Math.min(rect.left,innerWidth-170))}px;top:${Math.max(8,Math.min(rect.bottom+6,innerHeight-44))}px`;
+      host.style.cssText = 'position:fixed;z-index:2147483646;max-width:calc(100vw - 16px)';
       const shadow = host.attachShadow({mode:'open'});
-      shadow.innerHTML = `<style>button{font:13px/20px system-ui;color:#edf4ff;background:#1d65b5;border:1px solid #579cff;border-radius:5px;padding:5px 12px;box-shadow:0 3px 12px #0006;cursor:pointer}button:focus-visible{outline:2px solid #fff}p{max-width:280px;margin:4px 0;padding:6px;background:#181b1f;color:#ffb7b7;font:12px/1.5 system-ui}</style><button type="button">＋ 加入搜索</button><p role="status" hidden></p>`;
-      shadow.querySelector('button').addEventListener('pointerdown',e => e.preventDefault());
-      shadow.querySelector('button').addEventListener('click',() => {
-        if (!recognizedPage() || sourceURL !== location.href) { hide(); return; }
-        const result = mounted.addSelection(text);
-        if (result === true) { hide(); window.getSelection()?.removeAllRanges(); }
-        else { const status = shadow.querySelector('p'); status.hidden = false; status.textContent = result; }
-      });
+      shadow.innerHTML = `<style>.actions{display:flex;gap:4px;flex-wrap:wrap}button{font:13px/20px system-ui;color:#edf4ff;background:#1d65b5;border:1px solid #579cff;border-radius:5px;padding:5px 12px;box-shadow:0 3px 12px #0006;cursor:pointer}button:focus-visible{outline:2px solid #fff}p{max-width:280px;margin:4px 0;padding:6px;background:#181b1f;color:#ffb7b7;font:12px/1.5 system-ui}</style><div class="actions"><button id="append" type="button" title="追加关键词并立即搜索">＋ 加入搜索</button><button id="replace" type="button" title="替换当前查询的全部关键词并立即搜索">替换搜索</button></div><p role="status" hidden></p>`;
+      for (const action of ['append','replace']) {
+        const button = shadow.querySelector('#' + action);
+        button.addEventListener('pointerdown',e => e.preventDefault());
+        button.addEventListener('click',() => {
+          if (!recognizedPage() || sourceURL !== location.href) { hide(); return; }
+          const result = mounted.addSelection(text,action === 'replace');
+          if (result === true) { hide(); window.getSelection()?.removeAllRanges(); }
+          else { const status = shadow.querySelector('p'); status.hidden = false; status.textContent = result; position(rect); }
+        });
+      }
       document.body.append(host);
+      position(rect);
       diagnose('shown');
     }
     // Grafana log rows can stop bubbling; observe selection before row handlers.
@@ -609,8 +617,7 @@
       if (!selection?.rangeCount || selection.toString() !== text) { hide(); return; }
       const rect = selection.getRangeAt(0).getBoundingClientRect();
       if (rect.bottom < 0 || rect.top > innerHeight) { hide(); return; }
-      host.style.left = `${Math.max(8,Math.min(rect.left,innerWidth-170))}px`;
-      host.style.top = `${Math.max(8,Math.min(rect.bottom+6,innerHeight-44))}px`;
+      position(rect);
     },true);
     window.addEventListener('resize',hide);
     setInterval(() => { if (host && (!recognizedPage() || sourceURL !== location.href || window.getSelection()?.toString() !== text)) hide({type:'selection-or-url-changed'}); },300);

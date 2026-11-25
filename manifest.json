@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EasyGrafana",
-  "version": "1.11.4",
+  "version": "1.12.0",
   "description": "自动识别任意域名下的 Grafana Explore，用简易或高级模式编辑 Loki / grep 日志数据源 查询。",
   "action": {
     "default_title": "EasyGrafana · 日志搜索",

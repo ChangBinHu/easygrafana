@@ -1,0 +1,42 @@
+name: Publish release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate version and test
+        run: |
+          node -e 'const v = require("./manifest.json").version; if (process.env.GITHUB_REF_NAME !== `v${v}`) throw Error("Tag does not match manifest version");'
+          node --test tests/*.test.cjs
+      - name: Package extension
+        run: python3 package.py
+      - name: Prepare release notes
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          version = json.loads(Path('manifest.json').read_text())['version']
+          notes = []
+          for name in ['README.md', 'README.en.md']:
+              text = Path(name).read_text()
+              section = text.split('## ' + version, 1)[1].split('\n## ', 1)[0]
+              notes.append('## ' + version + section)
+          notes.append('\nDownload **EasyGrafana.zip** below, unzip it, and load the folder containing manifest.json from chrome://extensions or edge://extensions with Developer mode enabled.\n')
+          Path('release-notes.md').write_text('\n\n'.join(notes))
+          PY
+      - name: Publish release with installable ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/EasyGrafana.zip --verify-tag --title "EasyGrafana ${GITHUB_REF_NAME#v}" --notes-file release-notes.md --latest

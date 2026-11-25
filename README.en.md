@@ -203,3 +203,12 @@ Real pages sometimes trigger a scroll event immediately after text selection, wh
 ## 1.11.4: Search immediately after adding a keyword
 
 Clicking **＋ 加入搜索** appends the complete keyword and immediately executes the query, preserving the environment, time range, and other query conditions, and updating usage history. Selecting text alone does not search; invalid queries are not executed.
+
+## 1.12.0: Replace search with selected text
+
+Selecting text shows both **＋ 加入搜索** (Add to search) and **替换搜索** (Replace search):
+
+- **Add to search** keeps existing keywords, appends the selection, and immediately runs the query.
+- **Replace search** clears all keyword conditions in the selected query, including exclusions, then searches immediately using the selection as one literal keyword. For example, `oldId NOT debug` becomes `newId`.
+
+Both actions preserve the environment, time range, and other queries, as well as subsequent Loki parsing/filtering stages. Advanced queries must support lossless conversion; otherwise the original draft is kept and an error is shown. Reload the extension and refresh Grafana after updating.
