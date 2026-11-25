@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "EasyGrafana",
+  "version": "1.11.4",
+  "description": "自动识别任意域名下的 Grafana Explore，用简易或高级模式编辑 Loki / grep 日志数据源 查询。",
+  "action": {
+    "default_title": "EasyGrafana · 日志搜索",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "query.js",
+        "inline.js",
+        "history.js",
+        "json-viewer.js",
+        "log-copy.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
