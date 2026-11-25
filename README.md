@@ -1,5 +1,7 @@
 # EasyGrafana 1.11.4
 
+**简体中文** | [English](README.en.md)
+
 自动识别 Grafana Explore 的 Chrome / Edge 扩展，提供一键切换的简易 / 高级日志查询模式。
 
 ## 安装（三步完成）
