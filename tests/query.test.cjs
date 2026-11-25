@@ -472,3 +472,24 @@ test('selection append rejects invalid drafts or unsafe unsupported characters',
   assert.throws(() => Q.appendKeyword('old','new','raw'));
   assert.deepEqual(Q.parseTerms(Q.appendKeyword('NOT old','a|b','loki'),'loki'),[{word:'old',exclude:true},{word:'a|b',exclude:false}]);
 });
+
+test('simple grep keywords match punctuation literally, including exclusions and mode roundtrips', () => {
+  const {spawnSync}=require('node:child_process');
+  for (const word of ['messageNum: 100 not in [3, 14]','a.b','x+y','[tag]','a\\b','(hi)','path?','a*']) {
+    for (const exclude of [false,true]) {
+      const input=(exclude?'NOT ':'')+JSON.stringify(word);
+      const raw=Q.compile(input);
+      const match=/^grep\s+(-F\s+)?(-v\s+)?(.+)$/.exec(raw);
+      const pattern=match[3].startsWith('"')?JSON.parse(match[3]):match[3];
+      const lines=[word,'unrelated log'];
+      const result=spawnSync('grep',[...(match[1]?['-F']:[]),...(match[2]?['-v']:[]),pattern],{input:lines.join('\n')+'\n',encoding:'utf8'});
+      assert.equal(result.status,0,raw);
+      assert.deepEqual(result.stdout.trimEnd().split('\n'),[exclude?lines[1]:word],raw);
+      assert.equal(Q.compile(Q.decompile(raw)),raw);
+    }
+  }
+});
+
+test('existing regex grep queries remain advanced rather than silently changing meaning',()=>{
+  for(const raw of ['grep "[tag]"','grep a.b','grep -v "a.*"']) assert.equal(Q.decompile(raw),null,raw);
+});

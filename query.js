@@ -98,6 +98,7 @@
     return filters;
   }
   const escapeRegex = word => [...word].map(ch => '\\.^$|?*+()[]{}'.includes(ch) ? '\\' + ch : ch).join('');
+  const hasRegexSyntax = word => [...word].some(ch => '\\.^$|?*+()[]{}'.includes(ch));
   function compileTerm(term,dialect) {
     if (term.alternatives) {
       const pattern = '(' + term.alternatives.map(escapeRegex).join('|') + ')';
@@ -105,7 +106,7 @@
     }
     const {word,exclude} = term;
     const encoded = /^[a-zA-Z0-9_./:@=,+%]+$/u.test(word) ? word : JSON.stringify(word);
-    return dialect === 'loki' ? `${exclude ? '!=' : '|='} ${JSON.stringify(word)}` : `grep ${exclude ? '-v ' : ''}${encoded}`;
+    return dialect === 'loki' ? `${exclude ? '!=' : '|='} ${JSON.stringify(word)}` : `grep ${hasRegexSyntax(word) ? '-F ' : ''}${exclude ? '-v ' : ''}${encoded}`;
   }
   function compile(input,dialect = 'shiplog') {
     return parseTerms(input,dialect).map(term => compileTerm(term,dialect)).join(dialect === 'loki' ? ' ' : ' | ');
@@ -391,15 +392,17 @@
         if (!alternatives) return null;
         terms.push(simpleTerm({alternatives})); continue;
       }
-      const match = /^grep\s+(-v\s+)?(.+)$/u.exec(segment.trim());
+      const match = /^grep\s+(-F\s+)?(-v\s+)?(.+)$/u.exec(segment.trim());
       if (!match) return null;
-      let word = match[2];
+      let word = match[3];
       if (word.startsWith('"')) {
         try { word = JSON.parse(word); } catch { return null; }
         if (typeof word !== 'string') return null;
       } else if (/\s/u.test(word)) return null;
+      // Legacy patterns may be intentional regexes; never convert them to literals.
+      if (!match[1] && hasRegexSyntax(word)) return null;
       const term = simpleWord(word);
-      terms.push((match[1] ? 'NOT ' : '') + term);
+      terms.push((match[2] ? 'NOT ' : '') + term);
     }
     const input = terms.join(' ');
     try { compile(input); return input; } catch { return null; }

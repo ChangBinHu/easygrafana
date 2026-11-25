@@ -212,3 +212,9 @@ Selecting text shows both **＋ 加入搜索** (Add to search) and **替换搜�
 - **Replace search** clears all keyword conditions in the selected query, including exclusions, then searches immediately using the selection as one literal keyword. For example, `oldId NOT debug` becomes `newId`.
 
 Both actions preserve the environment, time range, and other queries, as well as subsequent Loki parsing/filtering stages. Advanced queries must support lossless conversion; otherwise the original draft is kept and an error is shown. Reload the extension and refresh Grafana after updating.
+
+## 1.12.1: Automatic literal matching for special characters
+
+Simple-mode keywords containing regex punctuation use `grep -F` for fixed-string matching, or `grep -F -v` for exclusions. For example, `"messageNum: 100 not in [3, 14]"` matches the original text instead of treating the brackets as a character class. Typing, Add to search, and Replace search share this behavior; numbers still match exactly. OR and Loki retain their existing literal matching behavior.
+
+Existing grep patterns with special characters and no `-F` remain in advanced mode to preserve regex semantics. To search them literally, clear the advanced search conditions, switch to simple mode, and enter the text again. Custom grep data sources must support `-F`.
