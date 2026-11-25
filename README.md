@@ -8,9 +8,9 @@
 
 无需安装开发工具，也不用执行命令。
 
-1. **下载并解压**：[下载 EasyGrafana](https://github.com/ChangBinHu/easygrafana/archive/refs/heads/main.zip)，将解压后的 `easygrafana-main` 文件夹放到固定位置。
+1. **下载并解压**：[下载 EasyGrafana.zip](https://github.com/ChangBinHu/easygrafana/releases/latest/download/EasyGrafana.zip)，解压到固定的 `EasyGrafana` 文件夹。
 2. **打开扩展管理页**：在地址栏输入 `chrome://extensions`（Edge 用 `edge://extensions`），开启「开发者模式」。
-3. **选择文件夹**：点击「加载已解压的扩展程序」，选择 `easygrafana-main` 文件夹，再刷新 Grafana 页面即可使用。
+3. **选择文件夹**：点击「加载已解压的扩展程序」，选择包含 `manifest.json` 的 `EasyGrafana` 文件夹，再刷新 Grafana 页面即可使用。
 
 安装后请保留该文件夹。已有旧版时，先禁用旧版，避免重复运行；如浏览器询问网站访问权限，请允许在需要使用的 Grafana 站点运行。
 

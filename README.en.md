@@ -10,9 +10,9 @@ This is the English documentation. The extension interface currently uses Chines
 
 No developer tools or terminal commands required.
 
-1. **Download and extract**: [Download EasyGrafana](https://github.com/ChangBinHu/easygrafana/archive/refs/heads/main.zip). Move the extracted `easygrafana-main` folder to a permanent location.
+1. **Download and extract**: [Download EasyGrafana.zip](https://github.com/ChangBinHu/easygrafana/releases/latest/download/EasyGrafana.zip). Extract it into a permanent folder named `EasyGrafana`.
 2. **Open the extensions page**: Enter `chrome://extensions` in the address bar (`edge://extensions` for Edge) and turn on **Developer mode**.
-3. **Select the folder**: Click **Load unpacked**, select `easygrafana-main`, then refresh your Grafana page.
+3. **Select the folder**: Click **Load unpacked**, select the `EasyGrafana` folder containing `manifest.json`, then refresh your Grafana page.
 
 Keep the installation folder after loading the extension. Disable any older copy first to avoid running two copies. If the browser asks for site access, allow it on the Grafana sites where you want to use the extension.
 
