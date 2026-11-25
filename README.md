@@ -2,14 +2,17 @@
 
 自动识别 Grafana Explore 的 Chrome / Edge 扩展，提供一键切换的简易 / 高级日志查询模式。
 
-## 安装或更新
+## 安装（三步完成）
 
-开发源码统一在本仓库维护。执行 `python3 package.py` 生成 `dist/EasyGrafana.zip`，解压后可安装；开发时也可直接加载本仓库根目录。
+无需安装开发工具，也不用执行命令。
 
-- 首次安装：打开 `chrome://extensions`（Edge 为 `edge://extensions`），启用开发者模式，选择「加载已解压的扩展程序」，选中含 manifest.json 的 EasyGrafana 文件夹。
-- 如果已经从桌面的 `tool/EasyGrafana/` 或 `tool/easygrafana/` 加载旧版：本仓库的修改不会自动同步到旧目录。开发时请禁用旧副本，再加载本仓库根目录，避免两份扩展同时运行。更换加载路径可能产生独立的扩展本地存储，旧检索历史不会自动迁移。
-- 如浏览器提示新增网站访问范围，需要允许所有网站，才能在不同 Grafana 域名自动识别。该授权由浏览器管理，扩展无法跳过。
-- 重新加载扩展后刷新已打开的 Grafana 页面。
+1. **下载并解压**：[下载 EasyGrafana](https://github.com/ChangBinHu/easygrafana/archive/refs/heads/main.zip)，将解压后的 `easygrafana-main` 文件夹放到固定位置。
+2. **打开扩展管理页**：在地址栏输入 `chrome://extensions`（Edge 用 `edge://extensions`），开启「开发者模式」。
+3. **选择文件夹**：点击「加载已解压的扩展程序」，选择 `easygrafana-main` 文件夹，再刷新 Grafana 页面即可使用。
+
+安装后请保留该文件夹。已有旧版时，先禁用旧版，避免重复运行；如浏览器询问网站访问权限，请允许在需要使用的 Grafana 站点运行。
+
+**更新方法**：重新下载并解压，将新文件覆盖到原安装文件夹，在扩展管理页点击 EasyGrafana 的「⟳ 重新加载」，再刷新 Grafana 页面。
 
 ## 自动使用
 
@@ -107,6 +110,10 @@ grep 日志数据源 编译为 grep -E，Loki 编译为 |~ 正则过滤；OR 分
 ## 本地开发与验证
 
 本仓库是开发源码的统一维护位置，可克隆到任意本地目录。
+
+开发时直接加载本仓库根目录；保存修改后，在扩展管理页重新加载插件，再刷新 Grafana 页面。原桌面目录不会自动同步更新，更换加载目录可能产生独立的扩展本地存储，旧检索历史不会自动迁移。
+
+分发包通过 `python3 package.py` 生成，输出为 `dist/EasyGrafana.zip`。
 
 在仓库根目录执行（需要 Node.js 和 Python 3）：
 
