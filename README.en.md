@@ -1,10 +1,20 @@
-# EasyGrafana 1.11.4
+# EasyGrafana 1.14.0
 
 [简体中文](README.md) | **English**
 
 A Chrome / Edge extension that automatically detects Grafana Explore and lets you switch between simple and advanced log queries.
 
 This is the English documentation. The extension interface currently uses Chinese labels.
+
+## Analyze logs with the local Codex desktop app
+
+Use **分析重点** to describe what to investigate, such as timeout causes, retries, or the error timeline. Opening or copying includes this focus together with the currently edited log context. Leave it blank for the default analysis. The focus is not persisted.
+
+Click **用 Codex 分析** in the query bar. Selected log text takes priority; otherwise the extension collects currently rendered log rows. Review, redact, and edit the analysis prompt, page query, and time range before opening Codex. Unrendered virtualized rows are excluded. Input beyond 100,000 characters is explicitly marked as truncated.
+
+Click **打开 Codex** to open the installed desktop app. Short prompts are prefilled in a new conversation. Long prompts also retain the entire preview in the launch URL for automatic prefill, with a clipboard backup. Check the Codex composer before sending. If your desktop version does not prefill, paste the backup with ⌘V / Ctrl+V. Exceeding the extension’s conservative encoded URL budget produces an explicit error rather than silently dropping context. A fallback link appears if launching throws or the page still has focus after a short delay; browsers cannot reliably confirm that an external app opened. Expand **项目目录配置** to save a local project root. A unique exact `app="name"` label resolves to root/name. Edit the path and click **记住此 app 的指定路径** to save a per-app override; **恢复根目录匹配** removes it. Overrides take priority. Regex, multiple apps, or unrecognized selectors require a manual path. Paths are stored only in local extension storage, without cloud sync or filesystem existence checks. Logs are not saved. Nothing is submitted automatically; sending in Codex shares the content with the selected model. Your browser may ask to open an external application.
+
+If launching or prefilling is unsupported, use **复制分析内容** and paste manually in Codex. This feature does not change or execute Grafana queries. The page query may differ from displayed results if edits have not been run.
 
 ## Install in three steps
 
@@ -224,3 +234,12 @@ Existing grep patterns with special characters and no `-F` remain in advanced mo
 Select text and click **排除搜索** (Exclude from search) to keep existing keywords, append one literal exclusion, and run the query immediately. For example, selecting `debug message` while searching for `request123` produces `request123 NOT "debug message"`. Exclusions can also be added to an empty search.
 
 Special characters retain literal matching: grep uses `-F -v`, while Loki uses `!=`. Environment, time range, other queries, and subsequent Loki pipeline stages are preserved. Advanced queries that cannot be converted losslessly retain their original draft and display an error. Reload the extension and refresh Grafana after updating.
+
+## 1.14.0: Analyze logs with Codex
+
+- Add a Codex analysis entry point using selected log text or currently rendered rows, with the page query and time range.
+- Review, edit, and redact context before opening the desktop app. Add an optional analysis focus above the action buttons. Nothing is sent automatically.
+- Configure a local project root and match an exact app label, with locally stored per-app path overrides.
+- Prefill long prompts through the launch URL, keep a clipboard backup, and offer a fallback link when launching cannot be confirmed. Only rendered logs are collected; input beyond 100,000 characters is visibly marked as truncated in the preview.
+- Local desktop checks confirmed start/end markers for short, medium, and approximately 60,000-character logs, plus the focus and log boundaries passed through the installed extension. Check prefill results on other browsers, operating systems, and desktop versions.
+- All 95 automated tests pass, covering query scope preservation, simple/advanced modes, grep/Loki, and Codex context transfer.

@@ -1,7 +1,7 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const allowed = new Set(['demo.js', 'query.js', 'inline.js','history.js','content.js','json-viewer.js','log-copy.js']);
+const allowed = new Set(['demo.js', 'query.js', 'inline.js','history.js','content.js','json-viewer.js','log-copy.js','codex-analysis.js']);
 const server = http.createServer((request, response) => {
   const route = new URL(request.url, 'http://127.0.0.1').pathname;
   const name = ['/', '/explore', '/grafana/explore', '/ordinary'].includes(route) ? 'demo.html' : route.slice(1);

@@ -1,0 +1,3 @@
+# Analysis focus
+
+Add an optional multiline analysis-focus field at the bottom of the preview, above the action buttons. Compose the user's focus and the current (possibly redacted) context only when opening or copying. Never regenerate or overwrite edited context. Empty focus preserves existing behavior. Both direct URL and long-content clipboard paths use the same composed text. Editing focus invalidates an earlier clipboard launch link. Focus is not persisted. Verify composition, both handoff paths, edits/clearing, and clipboard fallback; run the full suite and install locally without publishing.

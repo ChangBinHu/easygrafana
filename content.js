@@ -79,7 +79,7 @@
             <div id="advancedFields" hidden><label for="raw">原始检索条件</label><textarea id="raw" spellcheck="false" aria-describedby="advancedHint status" placeholder='grep 请求ID | grep -v debug'></textarea><p class="hint" id="advancedHint">只编辑检索条件，环境沿用页面设置 · Enter 换行 · Ctrl / ⌘ + Enter 搜索</p></div>
             <div class="preview-label">将执行的查询</div><pre id="preview" aria-label="查询预览"></pre>
             <p class="status" id="status" role="status" aria-live="polite"></p>
-            <div class="actions"><button id="copyLogs" type="button" title="复制当前页面已渲染的日志正文；不含未加载的日志">复制页面日志</button><button class="secondary" id="copy" type="button">复制查询</button><button class="primary" id="search" type="submit">搜索 ↵</button></div>
+            <div class="actions"><button id="codexAnalyze" type="button" title="预览日志并交给本机 Codex 桌面应用">用 Codex 分析</button><button id="copyLogs" type="button" title="复制当前页面已渲染的日志正文；不含未加载的日志">复制页面日志</button><button class="secondary" id="copy" type="button">复制查询</button><button class="primary" id="search" type="submit">搜索 ↵</button></div>
             <details><summary>查询预览与说明</summary><pre id="inlinePreview"></pre><p id="selector"></p><p id="pipeline"></p><p>自动识别 Loki / grep 日志数据源；查询范围以地址栏为准。多查询时仅修改当前选中项。复杂表达式无法转换时保留高级原文。</p><p id="historyStatus"></p><button class="secondary" id="restore" type="button">重新读取当前查询</button></details>
           </form>
         </section>
@@ -482,6 +482,17 @@
 
     };
     document.addEventListener('click',guardRun,true);
+    $('#codexAnalyze').addEventListener('mousedown',event => event.preventDefault());
+    $('#codexAnalyze').addEventListener('click',() => {
+      try {
+        const C = globalThis.EasyGrafanaCodex;
+        const selected = C.selectedLogs(document);
+        const logs = selected ? {text:selected} : globalThis.EasyGrafanaLogCopy.collect(document);
+        const current = Q.targets(location.href).find(item => item.id === targetId);
+        C.show(document,{text:logs.text,source:selected ? '选中日志' : `当前已渲染的 ${logs.count} 条日志`,
+          query:current?.raw,selector:current?.selector,from:current?.from,to:current?.to});
+      } catch(error) { message(error.message,true); }
+    });
     $('#copyLogs').addEventListener('click',async () => {
       const button = $('#copyLogs'); button.disabled = true;
       try {
