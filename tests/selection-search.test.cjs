@@ -45,11 +45,11 @@ test('adding selected text executes once; invalid or busy drafts never execute',
   }
 });
 
-test('replace selection clears keyword conditions and preserves scope, time and other queries',()=>{
+test('replace and exclude selections preserve scope, time, pipelines and other queries',()=>{
   const Q=require('../query.js');
   const source=fs.readFileSync(require('node:path').join(__dirname,'../content.js'),'utf8');
   const code=source.slice(source.indexOf('    function addSelection('),source.indexOf('    return {host,syncURL'));
-  for (const mode of ['simple','advanced']) for (const dialect of ['shiplog','loki']) {
+  for (const exclude of [false,true]) for (const mode of ['simple','advanced']) for (const dialect of ['shiplog','loki']) {
     const url=new URL('https://logs.example.com/explore?orgId=7&right=unchanged');
     const selector='{app="sample-service",cluster="cluster-test"}';
     const suffix=dialect==='loki'?' | json | status >= 500':'';
@@ -58,11 +58,11 @@ test('replace selection clears keyword conditions and preserves scope, time and 
     const editor=new Q.Editor(url.href); editor.switchMode(mode);
     let runs=0,submitted;
     const context={editor,submitting:false,syncURL(){},Q,location:{href:url.href},drafts:new Map(),targetId:editor.ctx.id,renderMode(){},refresh(){},syncNative(){},closeHistory(){},message(){},run:async()=>{runs++;submitted=context.editor.getURL(url.href);}};
-    vm.runInNewContext(code+';addSelection("new phrase",true);',context);
+    vm.runInNewContext(code+`;addSelection("new phrase",${!exclude},${exclude});`,context);
     assert.equal(runs,1);
     assert.equal(context.editor.mode,mode);
     const result=new URL(submitted), before=JSON.parse(url.searchParams.get('left')), after=JSON.parse(result.searchParams.get('left'));
-    assert.equal(after[3].expr,selector+(dialect==='loki'?' |= "new phrase"':'grep "new phrase"')+suffix);
+    assert.equal(after[3].expr,selector+(exclude?filters+(dialect==='loki'?' != "new phrase"':' | grep -v "new phrase"'):(dialect==='loki'?' |= "new phrase"':'grep "new phrase"'))+suffix);
     assert.deepEqual(after.slice(0,3),before.slice(0,3));
     assert.deepEqual(after[4],before[4]);
     assert.equal(result.searchParams.get('orgId'),'7');
@@ -74,20 +74,20 @@ test('unsafe replacements and nonconvertible advanced queries preserve the origi
   const Q=require('../query.js');
   const source=fs.readFileSync(require('node:path').join(__dirname,'../content.js'),'utf8');
   const code=source.slice(source.indexOf('    function addSelection('),source.indexOf('    return {host,syncURL'));
-  for (const scenario of ['invalid','complex','stale','busy']) {
+  for (const exclude of [false,true]) for (const scenario of ['invalid','complex','stale','busy']) {
     const url=new URL('https://logs.example.com/explore');
     url.searchParams.set('left',JSON.stringify(['now-1h','now','LogSearch',{expr:'{app="sample"}grep old'+(scenario==='complex'?' | sort':'')}]));
     const editor=new Q.Editor(url.href); editor.stale=scenario==='stale';
     let runs=0;
     const context={editor,submitting:scenario==='busy',syncURL(){},Q,location:{href:url.href},drafts:new Map(),targetId:editor.ctx.id,renderMode(){},refresh(){},syncNative(){},closeHistory(){},message(){},run:async()=>runs++};
-    vm.runInNewContext(code+`;addSelection(${JSON.stringify(scenario==='invalid'?'bad | command':'new')},true);`,context);
+    vm.runInNewContext(code+`;addSelection(${JSON.stringify(scenario==='invalid'?'bad | command':'new')},${!exclude},${exclude});`,context);
     assert.equal(runs,0,scenario);
     assert.equal(context.editor,editor,scenario);
   }
 });
 
-test('selection buttons dispatch append and replace and retain selection on errors',()=>{
-  for (const action of ['append','replace']) for (const result of [true,'query error']) {
+test('selection buttons dispatch append, replace and exclude and retain selection on errors',()=>{
+  for (const action of ['append','replace','exclude']) for (const result of [true,'query error']) {
     const h=harness(result);
     h.events.mouseup.fn({composedPath:()=>[],isComposing:false});
     let prevented=false,removed=false;
@@ -95,7 +95,7 @@ test('selection buttons dispatch append and replace and retain selection on erro
     h.buttons['#'+action].pointerdown({preventDefault(){prevented=true;}});
     h.buttons['#'+action].click();
     assert.equal(prevented,true);
-    assert.deepEqual(h.clicks,[['nickname',action==='replace']]);
+    assert.deepEqual(h.clicks,[['nickname',action==='replace',action==='exclude']]);
     assert.equal(h.isCleared(),result===true);
     assert.equal(removed,result===true);
     if(result!==true) assert.equal(h.buttons.p.textContent,result);

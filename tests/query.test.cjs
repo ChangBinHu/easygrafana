@@ -493,3 +493,16 @@ test('simple grep keywords match punctuation literally, including exclusions and
 test('existing regex grep queries remain advanced rather than silently changing meaning',()=>{
   for(const raw of ['grep "[tag]"','grep a.b','grep -v "a.*"']) assert.equal(Q.decompile(raw),null,raw);
 });
+
+test('selected text appends a literal exclusion without changing OR groups',()=>{
+  for (const dialect of ['shiplog','loki']) {
+    for (const text of ['two words','NOT','OR','[tag]','a.b','a"b']) {
+      const next=Q.appendKeyword('a OR b',text,dialect,true);
+      assert.deepEqual(Q.parseTerms(next,dialect),[{alternatives:['a','b'],exclude:false},{word:text,exclude:true}]);
+      assert.equal(Q.compile(Q.decompile(Q.compile(next,dialect),dialect),dialect),Q.compile(next,dialect));
+    }
+    assert.deepEqual(Q.parseTerms(Q.appendKeyword('','[tag]',dialect,true),dialect),[{word:'[tag]',exclude:true}]);
+  }
+  assert.equal(Q.compile(Q.appendKeyword('old','[tag]','shiplog',true)),'grep old | grep -F -v "[tag]"');
+  for(const text of ['', 'a|b','-v']) assert.throws(()=>Q.appendKeyword('old',text,'shiplog',true));
+});

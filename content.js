@@ -518,7 +518,7 @@
       selectDraft();
     }
     syncURL();
-    function addSelection(text, replace = false) {
+    function addSelection(text, replace = false, exclude = false) {
       try {
         if (submitting) throw new Error('查询正在提交，请稍后再修改关键词。');
         syncURL();
@@ -528,7 +528,7 @@
         const next = Object.assign(Object.create(Object.getPrototypeOf(editor)),editor);
         const mode = next.mode;
         if (mode === 'advanced') next.switchMode('simple');
-        next.input = Q.appendKeyword(replace ? '' : next.input,text,next.ctx.dialect);
+        next.input = Q.appendKeyword(replace ? '' : next.input,text,next.ctx.dialect,exclude);
         if (mode === 'advanced') next.switchMode('advanced');
         next.getURL(location.href);
         next.dirty = true;
@@ -585,13 +585,13 @@
       host = document.createElement('div'); host.id = 'easygrafana-selection-search';
       host.style.cssText = 'position:fixed;z-index:2147483646;max-width:calc(100vw - 16px)';
       const shadow = host.attachShadow({mode:'open'});
-      shadow.innerHTML = `<style>.actions{display:flex;gap:4px;flex-wrap:wrap}button{font:13px/20px system-ui;color:#edf4ff;background:#1d65b5;border:1px solid #579cff;border-radius:5px;padding:5px 12px;box-shadow:0 3px 12px #0006;cursor:pointer}button:focus-visible{outline:2px solid #fff}p{max-width:280px;margin:4px 0;padding:6px;background:#181b1f;color:#ffb7b7;font:12px/1.5 system-ui}</style><div class="actions"><button id="append" type="button" title="追加关键词并立即搜索">＋ 加入搜索</button><button id="replace" type="button" title="替换当前查询的全部关键词并立即搜索">替换搜索</button></div><p role="status" hidden></p>`;
-      for (const action of ['append','replace']) {
+      shadow.innerHTML = `<style>.actions{display:flex;gap:4px;flex-wrap:wrap}button{font:13px/20px system-ui;color:#edf4ff;background:#1d65b5;border:1px solid #579cff;border-radius:5px;padding:5px 12px;box-shadow:0 3px 12px #0006;cursor:pointer}button:focus-visible{outline:2px solid #fff}p{max-width:280px;margin:4px 0;padding:6px;background:#181b1f;color:#ffb7b7;font:12px/1.5 system-ui}</style><div class="actions"><button id="append" type="button" title="追加关键词并立即搜索">＋ 加入搜索</button><button id="replace" type="button" title="替换当前查询的全部关键词并立即搜索">替换搜索</button><button id="exclude" type="button" title="追加排除条件并立即搜索">排除搜索</button></div><p role="status" hidden></p>`;
+      for (const action of ['append','replace','exclude']) {
         const button = shadow.querySelector('#' + action);
         button.addEventListener('pointerdown',e => e.preventDefault());
         button.addEventListener('click',() => {
           if (!recognizedPage() || sourceURL !== location.href) { hide(); return; }
-          const result = mounted.addSelection(text,action === 'replace');
+          const result = mounted.addSelection(text,action === 'replace',action === 'exclude');
           if (result === true) { hide(); window.getSelection()?.removeAllRanges(); }
           else { const status = shadow.querySelector('p'); status.hidden = false; status.textContent = result; position(rect); }
         });

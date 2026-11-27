@@ -140,13 +140,13 @@
     result.push(text.slice(start)); return result;
   }
 
-  function appendKeyword(input, text, dialect = 'shiplog') {
+  function appendKeyword(input, text, dialect = 'shiplog', exclude = false) {
     if (typeof text !== 'string' || !text.trim() || text.length > 2000) throw new Error('请选择 1–2000 个字符的关键词。');
     const terms = parseTerms(input,dialect);
     // Selection is always a literal, including spaces and reserved NOT/OR words.
     const literal = simpleWord(text.trim());
     parseTerms(literal,dialect);
-    const next = [...terms.map(simpleTerm),literal].join(' ');
+    const next = [...terms.map(simpleTerm),(exclude ? 'NOT ' : '') + literal].join(' ');
     compile(next,dialect);
     return next;
   }

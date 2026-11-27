@@ -218,3 +218,9 @@ Both actions preserve the environment, time range, and other queries, as well as
 Simple-mode keywords containing regex punctuation use `grep -F` for fixed-string matching, or `grep -F -v` for exclusions. For example, `"messageNum: 100 not in [3, 14]"` matches the original text instead of treating the brackets as a character class. Typing, Add to search, and Replace search share this behavior; numbers still match exactly. OR and Loki retain their existing literal matching behavior.
 
 Existing grep patterns with special characters and no `-F` remain in advanced mode to preserve regex semantics. To search them literally, clear the advanced search conditions, switch to simple mode, and enter the text again. Custom grep data sources must support `-F`.
+
+## 1.13.0: Exclude selected text from search
+
+Select text and click **排除搜索** (Exclude from search) to keep existing keywords, append one literal exclusion, and run the query immediately. For example, selecting `debug message` while searching for `request123` produces `request123 NOT "debug message"`. Exclusions can also be added to an empty search.
+
+Special characters retain literal matching: grep uses `-F -v`, while Loki uses `!=`. Environment, time range, other queries, and subsequent Loki pipeline stages are preserved. Advanced queries that cannot be converted losslessly retain their original draft and display an error. Reload the extension and refresh Grafana after updating.
